@@ -1,4 +1,6 @@
+__pycache__
 config.json
-hash_salt.txt
 *.template.json
 todo.txt
+*/
+*.zip

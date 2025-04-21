@@ -1,9 +1,8 @@
 import os
 import json
-import uuid
 
 def input_body():
-    body = input("body (escape: [end]):\n")
+    body = input("body (escape: [end]):\n") + "\\n"
     while not body.strip().endswith("[end]\\n"):
         body += input() + "\\n"
     body = body.removesuffix("[end]\\n") + "\\n"

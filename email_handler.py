@@ -68,6 +68,7 @@ def send_save(template, password=""):
     import json
     import smtplib
     import mimetypes
+    import shutil
 
     if password == "":
         password = get_password()
@@ -78,13 +79,27 @@ def send_save(template, password=""):
     with open("config.json") as file:
         config = json.load(file)
 
-    mime_type, mime_subtype = mimetypes.guess_type(template["save_name"])[0].split("/")
+    path_to_save = os.path.join(template["save_path"], template["save_name"])
+    zip_path = template["save_name"] + ".zip"
     msg = create_msg(template, config)
+    
+    is_folder = os.path.isdir(path_to_save)
+    if is_folder:
+        shutil.make_archive(template["save_name"], "zip", path_to_save)
+        upload_path = zip_path
+        filename = zip_path
+    else:
+        upload_path = path_to_save
+        filename = template["save_name"]
 
-    with open(os.path.join(template["save_path"], template["save_name"]), "rb") as file:
+    print(filename, upload_path)
+
+    mime_type, mime_subtype = mimetypes.guess_type(filename)[0].split("/")
+
+    with open(upload_path, "rb") as file:
         data = file.read()
         msg.add_attachment(data, maintype=mime_type,
-        subtype=mime_subtype, filename=template["save_name"])
+        subtype=mime_subtype, filename=filename)
 
     ctx = ssl.create_default_context()
     with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=ctx) as smtp:
@@ -92,6 +107,7 @@ def send_save(template, password=""):
         smtp.send_message(msg)
 
     handle_mailbox(password, msg, template, config)
+    if is_folder: os.remove(zip_path)
 
     print("email sent!")
 
@@ -126,6 +142,7 @@ def load_save(template, password=""):
     import os
     import json
     import email
+    import shutil
     import imaplib
     from email import policy
 
@@ -149,8 +166,21 @@ def load_save(template, password=""):
 
         for part in msg.iter_attachments():
             filename = part.get_filename()
-            if filename == template["save_name"]:
-                with open(os.path.join(template["save_path"], filename), "wb") as file:
-                    file.write(part.get_payload(decode=True))
-                print(f"saved {filename}")
+            is_zip = filename.endswith(".zip")
+            unzip = filename.removesuffix(".zip")
+            save_path = os.path.join(template["save_path"], unzip)
+
+            if is_zip:
+                if unzip == template["save_name"]:
+                    with open(filename, "wb") as file:
+                        file.write(part.get_payload(decode=True))
+
+                shutil.unpack_archive(filename, save_path)
+                os.remove(filename)
+            else:
+                if filename == template["save_name"]:
+                    with open(save_path, "wb") as file:
+                        file.write(part.get_payload(decode=True))
+
+            print(f"saved {unzip}")
 
