@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import template
 import email_handler
@@ -41,12 +40,27 @@ def show_help():
     print("login - login for the session")
     print("toggle-help - toggle this list on startup")
     print("edit <template> <property (optional)> - edit one or all properties")
+    print("list - list all templates")
+    print("remove <template> - remove template")
     print("help - display this list")
     print()
+
+def show_list():
+    templates = filter(lambda x: x.endswith(".template.json"), os.listdir("."))
+    for t in templates:
+        print(t.removesuffix(".template.json"))
+
+def remove_template(template):
+    try:
+        os.remove("".join((template, ".template.json")))
+        print("template removed!")
+    except FileNotFoundError:
+        print("template does not exist!")
 
 if __name__ == "__main__":
     password = ""
 
+    print()
     print("I~~~~~~~~~~~~~~~~~~~~~~~~~I")
     print("I welcome to save mailer! I")
     print("I~~~~~~~~~~~~~~~~~~~~~~~~~I\n")
@@ -81,6 +95,10 @@ if __name__ == "__main__":
                 toggle_help(config)
             case "help":
                 show_help()
+            case "list":
+                show_list()
+            case "remove":
+                remove_template(user_input[1])
             case "exit":
                 break
     

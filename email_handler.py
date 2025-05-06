@@ -92,8 +92,6 @@ def send_save(template, password=""):
         upload_path = path_to_save
         filename = template["save_name"]
 
-    print(filename, upload_path)
-
     mime_type, mime_subtype = mimetypes.guess_type(filename)[0].split("/")
 
     with open(upload_path, "rb") as file:
